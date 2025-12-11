@@ -20,16 +20,24 @@ class HalfAdderTester extends AnyFlatSpec with ChiselScalatestTester {
   "HalfAdder" should "work" in {
     test(new HalfAdder).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
 
-          /*dut.io.a.poke(...)
-           *dut.io.b.poke(...)
-           *dut.io.ci.poke(...)
-           *dut.io.s.expect(...)
-           *dut.io.co.expect(...)
-           *...
-           *TODO: Insert your test cases
-           */
+      val testCases = Seq(
+        (false.B, false.B, false.B, false.B), // 0 + 0
+        (false.B, true.B,  true.B,  false.B), // 0 + 1
+        (true.B,  false.B, true.B,  false.B), // 1 + 0
+        (true.B,  true.B,  false.B, true.B)   // 1 + 1
+      )
+      for ((a, b, expectedSum, expectedCarry) <- testCases) {
+        dut.io.a.poke(a)
+        dut.io.b.poke(b)
 
-        }
+        // step 1 cycle so the waveform shows the change
+        dut.clock.step()
+
+        dut.io.sum.expect(expectedSum)
+        dut.io.carry.expect(expectedCarry)
+      }
+
+    }
     } 
 }
 

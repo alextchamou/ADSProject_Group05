@@ -21,14 +21,13 @@ import chisel3.util._
 class HalfAdder extends Module{
   
   val io = IO(new Bundle {
-    /* 
-     * TODO: Define IO ports of a half adder as presented in the lecture
-     */
+    val a = Input(Bool())
+    val b = Input(Bool())
+    val sum = Output(Bool())
+    val carry = Output(Bool())
     })
-
-  /* 
-   * TODO: Describe output behaviour based on the input values
-   */
+  io.sum := io.a ^ io.b  //XOR
+  io.carry := io.a & io.b //AND
 
 }
 
@@ -46,20 +45,28 @@ class HalfAdder extends Module{
 class FullAdder extends Module{
 
   val io = IO(new Bundle {
-    /* 
-     * TODO: Define IO ports of a half adder as presented in the lecture
-     */
+    val a = Input(Bool())
+    val b = Input(Bool())
+    val cin = Input(Bool())
+    val sum = Output(Bool())
+    val cout = Output(Bool())
     })
+  // Instanciate the two half adders that will be used to implement FA
+  val ha1 = Module (new HalfAdder())
+  val ha2 = Module (new HalfAdder())
 
+  // connect input
+  ha1.io.a := io.a
+  ha1.io.b := io.b
 
-  /* 
-   * TODO: Instanciate the two half adders you want to use based on your HalfAdder class
-   */
+  ha2.io.a := ha1.io.sum
+  ha2.io.b := io.cin
 
+  //output sum from second half adder
+  io.sum := ha2.io.sum
 
-  /* 
-   * TODO: Describe output behaviour based on the input values and the internal signals
-   */
+  // OR the two carry outputs
+  io.cout := ha1.io.carry | ha2.io.carry
 
 }
 
@@ -76,17 +83,44 @@ class FullAdder extends Module{
 class FourBitAdder extends Module{
 
   val io = IO(new Bundle {
-    /* 
-     * TODO: Define IO ports of a 4-bit ripple-carry-adder as presented in the lecture
-     */
+    val a = Input(UInt(4.W))
+    val b = Input(UInt(4.W))
+    val sum = Output(Vec(4,Bool()))
+    val sumUInt = Output(UInt(4.W))   // I Would like to visualize the end result of the addition in the waves
+    val carry = Output(Bool())
     })
+  // Instance the modules
+  val ha = Module(new HalfAdder())
+  val fa1 = Module(new FullAdder())
+  val fa2 = Module(new FullAdder())
+  val fa3 = Module(new FullAdder())
 
-  /* 
-   * TODO: Instanciate the full adders and one half adderbased on the previously defined classes
-   */
+ // Bit 0 : Half Adder
+  ha.io.a := io.a(0)
+  ha.io.b := io.b(0)
+  io.sum(0) := ha.io.sum  //LSB sum
+  val c0 = ha.io.carry  //carry out to next stage
 
+  // Bit 1 : Fullader  connect a1 & b1 to the Fulladder and connect the output to internal signals
+  fa1.io.a := io.a(1)
+  fa1.io.b := io.b(1)
+  fa1.io.cin := c0
+  io.sum(1) := fa1.io.sum
+  val c1 = fa1.io.cout
 
-  /* 
-   * TODO: Describe output behaviour based on the input values and the internal 
-   */
+   // Bit 2 : Fulladder
+  fa2.io.a := io.a(2)
+  fa2.io.b := io.b(2)
+  fa2.io.cin := c1
+  io.sum(2) := fa2.io.sum
+  val c2 = fa2.io.cout
+
+  // Bit 3 : Fulladder
+  fa3.io.a := io.a(3)
+  fa3.io.b := io.b(3)
+  fa3.io.cin := c2
+  io.sum(3) := fa3.io.sum
+  io.carry := fa3.io.cout
+  //  Combine bits into a UInt for Surfer
+  io.sumUInt := io.sum.asUInt
 }
