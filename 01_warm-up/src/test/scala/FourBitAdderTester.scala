@@ -29,15 +29,35 @@ import org.scalatest.flatspec.AnyFlatSpec
   */
 class FourBitAdderTester extends AnyFlatSpec with ChiselScalatestTester {
 
-  "4-bit Adder" should "work" in {
+  "4-bit Adder" should "add two 4-bit numbers correctly" in {
     test(new FourBitAdder).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
 
-        
-      /*
-       * TODO: Insert your test cases
-       */  
-        
-      
+      // Test all possible input combinations: 0..15 + 0..15
+      for (a <- 0 until 16) {
+        for (b <- 0 until 16) {
+
+          // Apply inputs
+          dut.io.a.poke(a.U)
+          dut.io.b.poke(b.U)
+
+          // Simulate one cycle to show in VCD
+          dut.clock.step()
+
+          // Compute expected result in Scala
+          val sum        = a + b           // 0..30
+          val expSumLow4 = sum & 0xF       // lower 4 bits
+          val expCarry   = sum > 15        // carry if result > 15
+
+          // Check each sum bit individually (Vec(4,Bool()))
+          for (i <- 0 until 4) {
+            val bit = ((expSumLow4 >> i) & 0x1) != 0
+            dut.io.sum(i).expect(bit.B)
+          }
+
+          // Check carry
+          dut.io.carry.expect(expCarry.B)
+        }
+      }
     } 
   }
 }
