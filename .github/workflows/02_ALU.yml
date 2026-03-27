@@ -3,7 +3,7 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: 01_warm-up
+name: 02_ALU
 
 on:
   push:
@@ -33,4 +33,4 @@ jobs:
       
 defaults:
   run:
-    working-directory: 01_warm-up # The working directory path
+    working-directory: 02_ALU # The working directory path
